@@ -23,7 +23,7 @@ def sync_lamport(tempo_recebido):
         RELOGIO_LAMPORT = max(RELOGIO_LAMPORT, tempo_recebido) + 1
         return RELOGIO_LAMPORT
 
-# Variáveis para a Exclusão Mútua (Ricart-Agrawala)
+# Variáveis para a Exclusão Mútua 
 ESTADO_CS = "RELEASED" 
 meu_timestamp_pedido = 0
 fila_pendentes = []
@@ -47,9 +47,6 @@ def descobrir_servidor():
     IP_DO_DNS = '127.0.0.1' 
     try:
         dns_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
-        # ANTES ESTAVA ASSIM: dns_socket.connect(('127.0.0.1', 9000))
-        # DEIXE ASSIM:
         dns_socket.connect((IP_DO_DNS, 9000)) 
         
         dns_socket.send(json.dumps({"header": {"tipo_mensagem": "COMANDO_DESCOBRIR_SERVICO"}, "payload": {"nome_servico": "servidor_tradehub"}}).encode('utf-8'))
@@ -98,8 +95,6 @@ def escutar_servidor(client_socket):
                         else:
                             resp = criar_envelope("ROTEAR_P2P", {"destino": origem_p2p, "tipo_p2p": "REPLY_CS", "origem": CLIENT_ID})
                             client_socket.send(json.dumps(resp).encode('utf-8'))
-
-                # Recebi o OK de alguém
                 elif sub_tipo == "REPLY_CS":
                     with lock_cs:
                         respostas_faltantes -= 1

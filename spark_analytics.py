@@ -1,41 +1,55 @@
 import os
-import json
-from collections import Counter
+import sys
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, sum as spark_sum
+
+os.environ['JAVA_HOME'] = r'C:\Program Files\Microsoft\jdk-25.0.2.10-hotspot'
+os.environ['JAVA_HOME'] = r'C:\Program Files\Java\jdk-17'
+
+os.environ['PYSPARK_PYTHON'] = sys.executable
+os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+os.environ['spark.python.use.daemon'] = 'false'
+
+print("🚀 Iniciando  Apache Spark... Aguarde.")
+
+# Inicializa o cluster Spar
+spark = SparkSession.builder \
+    .appName("TradeHub_Analytics_Real") \
+    .master("local[*]") \
+    .config("spark.driver.host", "127.0.0.1") \
+    .config("spark.driver.bindAddress", "127.0.0.1") \
+    .getOrCreate()
+
+spark.sparkContext.setLogLevel("ERROR")
 
 ARQUIVO_LOG = "market_logs.json"
 
-print("🚀 Iniciando Motor de Analytics (Modo Standalone / Batch)...")
-
 if not os.path.exists(ARQUIVO_LOG):
-    print("❌ Nenhum dado encontrado. Faça uma compra no cliente primeiro para gerar o log.")
+    print("❌ Nenhum dado encontrado. Faça uma compra no cliente primeiro.")
 else:
     try:
-        # Lê os logs gerados pelo Servidor de Transações
-        with open(ARQUIVO_LOG, "r", encoding="utf-8") as f:
-            logs = [json.loads(linha) for linha in f if linha.strip()]
-        
-        # Filtra apenas as vendas reais
-        vendas = [log for log in logs if log.get("tipo_evento") == "VENDA"]
+    
+        df = spark.read.json(ARQUIVO_LOG)
         
         print("\n" + "="*55)
-        print(" 📊 RELATÓRIO DE INTELIGÊNCIA DE MERCADO (TRADEHUB)")
+        print(" 📊 DASHBOARD DE INTELIGÊNCIA DE MERCADO (APACHE SPARK)")
         print("="*55)
         
-        # 1. Total de vendas
-        total_vendas = len(vendas)
+        # Processamento Massivo Distribuído do Spark:
+        total_vendas = df.filter(col("tipo_evento") == "VENDA").count()
         print(f"📈 Total de Skins Vendidas: {total_vendas}")
         
-        # 2. Soma do faturamento
-        receita_total = sum(log.get("valor", 0) for log in vendas)
-        print(f"💰 Volume Financeiro Total: R$ {receita_total:,.2f}")
+        if "valor" in df.columns:
+            receita_row = df.filter(col("tipo_evento") == "VENDA").agg(spark_sum("valor").alias("receita")).collect()[0]
+            receita = receita_row["receita"] if receita_row["receita"] is not None else 0
+            print(f"💰 Volume Financeiro Total: R$ {receita:,.2f}")
         
-        # 3. Ranking das skins mais vendidas
         print("\n🏆 Ranking de Popularidade (Skins mais compradas):")
-        contador_itens = Counter(log.get("item") for log in vendas)
-        for item, qtd in contador_itens.most_common():
-            print(f"- {item:<25} | {qtd} venda(s)")
+        if "item" in df.columns:
+            ranking = df.filter(col("tipo_evento") == "VENDA").groupBy("item").count().orderBy(col("count").desc())
+            ranking.show(truncate=False)
             
     except Exception as e:
-        print(f"🚨 ERRO NA EXECUÇÃO: {e}")
+        print(f"🚨 ERRO DO SPARK: {e}")
 
-print("\n✅ Processamento concluído com sucesso.")
+spark.stop()

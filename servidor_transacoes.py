@@ -134,7 +134,7 @@ def manipular_cliente(conn, endereco):
             elif tipo_msg == "COMANDO_INTENCAO_COMPRA":
                 item_id = payload.get("item_id")
                 
-                # Exclusão Mútua Distribuída: O servidor confia que os clientes já negociaram a trava
+                # O servidor confia que os clientes já negociaram a trava
                 if item_id in MERCADO_SKINS:
                     preco_vendido = MERCADO_SKINS[item_id] # 1. SALVA O PREÇO ANTES DE DELETAR
                     del MERCADO_SKINS[item_id] 
@@ -143,7 +143,7 @@ def manipular_cliente(conn, endereco):
                     # 2. CHAMA A FUNÇÃO DE LOG AQUI PARA O SPARK LER DEPOIS
                     registrar_log_analytics("VENDA", {"item": item_id, "comprador": remetente, "valor": preco_vendido})
                     
-                    # Comunicação Assíncrona: Evento de Broadcast avisando a venda
+                    #  Evento de Broadcast avisando a venda
                     msg_venda = json.dumps(criar_envelope("EVENTO_ITEM_VENDIDO", {"item": item_id, "comprador": remetente})).encode('utf-8')
                     with lock_clientes:
                         for c_id, c_conn in MAPA_CLIENTES.items():
@@ -178,12 +178,12 @@ def iniciar_servidor():
     
     servidor = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     meu_ip = obter_ip_local()
-    servidor.bind((meu_ip, 0)) # Amarra no IP real da rede
+    servidor.bind((meu_ip, 0)) 
     minha_porta = servidor.getsockname()[1]
     
     try:
         dns_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        dns_socket.connect((IP_DO_DNS, 9000)) # Conecta no PC 1
+        dns_socket.connect((IP_DO_DNS, 9000)) 
         dns_socket.send(json.dumps({"header": {"tipo_mensagem": "COMANDO_REGISTRAR_SERVICO"}, "payload": {"nome_servico": "servidor_tradehub", "ip": meu_ip, "porta": minha_porta}}).encode('utf-8'))
         dns_socket.close()
     except Exception:

@@ -2,11 +2,10 @@ import socket
 import threading
 import json
 
-# O Servidor de Nomes atua como o Service Discovery (DNS fixo da arquitetura)
-HOST = '0.0.0.0' # 0.0.0.0 significa "Escute em todas as placas de rede deste PC"
+# O Servidor de Nomes atua como DNS fixo da arquitetura
+HOST = '0.0.0.0' 
 PORTA_NOME = 9000 
 
-# "Lista telefônica" em memória que guarda onde cada serviço está rodando
 REGISTRO_SERVICOS = {}
 lock_registro = threading.Lock() # Exclusão Mútua local para proteger o dicionário
 
@@ -31,7 +30,7 @@ def manipular_requisicao(conn, endereco):
                 print(f"[REGISTRO] '{nome}' registrado em {ip}:{porta}")
                 conn.send(json.dumps({"status": "OK"}).encode('utf-8'))
 
-            # CASO 2: Um cliente quer descobrir onde o mercado está (Transparência de Localização)
+            # CASO 2: Um cliente quer descobrir onde o mercado está 
             elif tipo_msg == "COMANDO_DESCOBRIR_SERVICO":
                 nome = payload.get("nome_servico")
                 
@@ -51,7 +50,7 @@ def manipular_requisicao(conn, endereco):
     except Exception as e: 
         print(f"Erro no processamento do DNS: {e}")
     finally: 
-        # Padrão Request-Reply: A conexão é fechada logo após a resposta
+        # A conexão é fechada logo após a resposta
         conn.close()
 
 def iniciar_servidor_nomes():
@@ -63,7 +62,7 @@ def iniciar_servidor_nomes():
 
     while True:
         conn, endereco = servidor.accept()
-        # Concorrência: Delega o atendimento rápido para uma Thread independente
+        # Delega o atendimento rápido para uma Thread independente
         threading.Thread(target=manipular_requisicao, args=(conn, endereco)).start()
 
 if __name__ == "__main__":

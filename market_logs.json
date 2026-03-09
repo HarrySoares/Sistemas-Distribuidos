@@ -1,3 +1,4 @@
 {"timestamp_log": "2026-03-09T02:43:28.636627+00:00", "tipo_evento": "VENDA", "item": "AK-47 | Redline", "comprador": "usr_e97c", "valor": 120.71}
 {"timestamp_log": "2026-03-09T02:59:51.395976+00:00", "tipo_evento": "VENDA", "item": "AK-47 | Redline", "comprador": "usr_a0ff", "valor": 120.5}
 {"timestamp_log": "2026-03-09T03:21:24.817433+00:00", "tipo_evento": "VENDA", "item": "AK-47 | Asiimov", "comprador": "usr_120f", "valor": 439.14}
+{"timestamp_log": "2026-03-09T13:35:02.050737+00:00", "tipo_evento": "VENDA", "item": "Glock-18 | Fade", "comprador": "usr_09c4", "valor": 3000.0}
